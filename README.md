@@ -28,4 +28,4 @@ I refactored the code a lot while working on it, but it is far from ideal and mo
 
 The Javadoc of the project classes was also pending.
 
-For simplicity and time saving, I created unit tests only for the model class, but I know that the entire app logic should have unit tests.
+For simplicity and time saving, I created unit tests only for the model class an two integration tests for `GithubParserControllerTest` class, but I know that the entire app logic should have unit tests.

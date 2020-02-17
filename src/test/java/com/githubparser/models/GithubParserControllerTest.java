@@ -13,7 +13,7 @@ import com.githubparser.utils.URLDownloader;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 
-public class GithubParserRepositoryTest {
+public class GithubParserControllerTest {
     @BeforeClass
     public static void ensureAppIsRunning() {
         GithubParserSparkerStarter.get(Constants.LOCALHOST_ROOT_URL, "/").startSparkAppIfNotRunning(4567);
