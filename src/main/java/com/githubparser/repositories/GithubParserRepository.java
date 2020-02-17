@@ -27,6 +27,20 @@ public class GithubParserRepository {
             .collect(Collectors.groupingBy(GithubFileInfo::getFileExtension));
     }
 
+	public String getFilenameFromUrl(String url)
+	{
+		String regex = "[ \\w-]+\\.[\\w-]*$";
+		Pattern pattern = Pattern.compile(regex);
+		Matcher matcher = pattern.matcher(url);
+
+		StringBuilder result = new StringBuilder();
+		while (matcher.find()) { 
+    		result.append(matcher.group(0));
+		}
+
+		return result.toString();
+	}
+
     private List<GithubFileInfo> ScrapGitHubUrl(String url) throws Exception {
 		Validators.validGithubURL(url, url + " is an invalid Github repository URL", true);
 		List<GithubFileInfo> fileInfoList = new ArrayList<GithubFileInfo>();
@@ -34,10 +48,21 @@ public class GithubParserRepository {
 
 		while (matcher.find()) {
 			String fileUrl = Constants.GITHUB_ROOT_URL + StringUtils.substringBetween(matcher.group(0), Constants.GITHUB_FILE_SCRAP_START, Constants.GITHUB_FILE_SCRAP_END);
-			String fileExtension = FilenameUtils.getExtension(fileUrl);
+			URL rawURL = new URL(fileUrl.replace(Constants.GITHUB_ROOT_URL, Constants.GITHUB_RAW_CONTENT_URL).replace(Constants.GITHUB_BLOB, ""));
 
-			if (Validators.nonEmptyString(fileExtension, null, false)) {
-				GithubFileInfo githubFileInfo = new GithubFileInfo(fileUrl, FilenameUtils.getFullPath(fileUrl), FilenameUtils.getName(fileUrl), fileExtension);
+			if (URLDownloader.URLExists(rawURL)) {
+				String fileExtension = FilenameUtils.getExtension(fileUrl);
+				String fileName = FilenameUtils.getName(fileUrl);
+
+				if (!Validators.nonEmptyString(fileExtension, "", false)) {
+					fileExtension = fileName;
+				}
+
+				if (!Validators.nonEmptyString(fileName, "", false)) {
+					fileName = fileExtension;
+				}
+
+				GithubFileInfo githubFileInfo = new GithubFileInfo(fileUrl, FilenameUtils.getFullPath(fileUrl), fileName, fileExtension);
 				this.parseGithubFileStats(githubFileInfo);
 				fileInfoList.add(githubFileInfo);
 			} else {
@@ -54,17 +79,26 @@ public class GithubParserRepository {
 			githubFileInfo.getFileUrl());
 
 		while (matcher.find()) {
-			String[] size;
+			int lines = 0;
+			String[] sizeInfo = null;
+			float size = 0.0f;
 
 			try {
-				String lines = StringUtils.substringBetween(matcher.group(0), Constants.GITHUB_LINES_SCRAP_START, Constants.GITHUB_LINES_SCRAP_END).trim();
-				githubFileInfo.setLines(Integer.parseInt(lines));
-				size = StringUtils.substringBetween(matcher.group(0), Constants.SPAN_ENDING_TAG, Constants.DIV_ENDING_TAG).trim().split(" ");
+				lines = Integer.parseInt(StringUtils.substringBetween(matcher.group(0), Constants.GITHUB_LINES_SCRAP_START, Constants.GITHUB_LINES_SCRAP_END).trim());
 			} catch (Exception e) {
-				size = StringUtils.substringBetween(matcher.group(0), Constants.GITHUB_LINES_SCRAP_START, Constants.DIV_ENDING_TAG).trim().split(" ");
+				lines = 0;
 			}
 
-			githubFileInfo.setBytes(this.convertGithubSizeToBytes(size));
+			try {
+				sizeInfo = StringUtils.substringBetween(matcher.group(0), Constants.SPAN_ENDING_TAG, Constants.DIV_ENDING_TAG).trim().split(" ");
+			} catch (Exception ex) {
+				sizeInfo = StringUtils.substringBetween(matcher.group(0), Constants.GITHUB_LINES_SCRAP_START, Constants.DIV_ENDING_TAG).trim().split(" ");
+			}
+
+			size = (sizeInfo != null && sizeInfo.length > 0) ? this.convertGithubSizeToBytes(sizeInfo) : 0;
+
+			githubFileInfo.setLines(lines);
+			githubFileInfo.setBytes(size);
 		}
 	}
 

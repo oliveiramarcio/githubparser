@@ -1,6 +1,7 @@
 package com.githubparser.utils;
 
 import java.io.IOException;
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
@@ -15,5 +16,14 @@ public class URLDownloader {
 		} finally {
 			scanner.close();
 		}
+	}
+
+	public static Boolean URLExists(URL url) throws IOException
+	{
+    	HttpURLConnection.setFollowRedirects(false);
+    	HttpURLConnection httpURLConnection = (HttpURLConnection) url.openConnection();
+    	httpURLConnection.setRequestMethod("HEAD");
+    	int responseCode = httpURLConnection.getResponseCode();
+    	return (responseCode == HttpURLConnection.HTTP_OK);
 	}
 }
