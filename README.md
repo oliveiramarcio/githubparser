@@ -1,4 +1,4 @@
-# Github Parser App
+# Github Parser App for Trustly's Hiring Challenge
 
 *Parses Github repository URL and returns repository files with total line numbers and bytes grouped by file extension in JSON format through Github repository page scraping.*
 
